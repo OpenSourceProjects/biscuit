@@ -12,8 +12,8 @@ import (
 	"github.com/dcoker/biscuit/algorithms/aesgcm256"
 	"github.com/dcoker/biscuit/algorithms/plain"
 	"github.com/dcoker/biscuit/algorithms/secretbox"
-	"github.com/dcoker/biscuit/cmd/awskms"
 	"github.com/dcoker/biscuit/cmd/internal/shared"
+	"github.com/dcoker/biscuit/cmd/kms"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -142,13 +142,13 @@ func Command(ctx context.Context) error {
 	writeCommand := NewPut(putFlags)
 	listCommand := NewList(listFlags)
 	exportCommand := NewExport(exportFlags)
-	kmsIDCommand := awskms.KmsGetCallerIdentity{}
-	kmsEditKeyPolicy := awskms.NewKmsEditKeyPolicy(kmsEditKeyPolicyFlags)
-	kmsGrantsListCommand := awskms.NewKmsGrantsList(kmsGrantsListFlags)
-	kmsGrantsCreateCommand := awskms.NewKmsGrantsCreate(kmsGrantsCreateFlags)
-	kmsGrantsRetireCommand := awskms.NewKmsGrantsRetire(kmsGrantsRetireFlags)
-	kmsInitCommand := awskms.NewKmsInit(kmsInitFlags, mustAsset("data/awskms-key.template"))
-	kmsDeprovisionCommand := awskms.NewKmsDeprovision(kmsDeprovisionFlags)
+	kmsIDCommand := kms.KmsGetCallerIdentity{}
+	kmsEditKeyPolicy := kms.NewKmsEditKeyPolicy(kmsEditKeyPolicyFlags)
+	kmsGrantsListCommand := kms.NewKmsGrantsList(kmsGrantsListFlags)
+	kmsGrantsCreateCommand := kms.NewKmsGrantsCreate(kmsGrantsCreateFlags)
+	kmsGrantsRetireCommand := kms.NewKmsGrantsRetire(kmsGrantsRetireFlags)
+	kmsInitCommand := kms.NewKmsInit(kmsInitFlags, mustAsset("data/awskms-key.template"))
+	kmsDeprovisionCommand := kms.NewKmsDeprovision(kmsDeprovisionFlags)
 
 	behavior := kingpin.MustParse(app.Parse(os.Args[1:]))
 	switch behavior {
