@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -12,11 +13,85 @@ import (
 	"sync"
 
 	"github.com/dcoker/biscuit/algorithms"
+	"github.com/dcoker/biscuit/algorithms/secretbox"
 	"github.com/dcoker/biscuit/cmd/internal/shared"
 	"github.com/dcoker/biscuit/keymanager"
 	"github.com/dcoker/biscuit/store"
+	"github.com/spf13/cobra"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+func putCmd(ctx context.Context) *cobra.Command {
+	var filename string
+	var keyID string
+	var keyManager string
+	var algo string
+	var fromFileStr string
+	cmd := &cobra.Command{
+		Use:     "put <key> [value]",
+		Aliases: []string{"write"},
+		Short:   "Write a secret",
+		Args:    cobra.RangeArgs(1, 2),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			for k, v := range map[string]string{
+				"filename": filename,
+			} {
+				if v == "" {
+					return fmt.Errorf("flag %s marked as required", k)
+				}
+			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			var value string
+			var fromFile *os.File = nil
+			var err error
+			if len(args) > 1 {
+				value = args[1]
+			}
+
+			if fromFileStr != "" {
+				fromFile, err = os.Open(fromFileStr)
+				if err != nil {
+					return fmt.Errorf("could not open file: %w", err)
+				}
+				defer fromFile.Close()
+			}
+
+			p := &put{
+				keyID:      &keyID,
+				keyManager: &keyManager,
+				name:       &name,
+				algo:       &algo,
+				filename:   &filename,
+				value:      &value,
+				fromFile:   &fromFile,
+			}
+			return p.Run(ctx)
+		},
+	}
+	cmd.Flags().StringVarP(&filename, "filename", "f", "", "Name of file storing the secrets. If the environment variable BISCUIT_FILENAME")
+
+	cmd.Flags().StringVarP(&keyID, "key-id", "k", "",
+		"The ID of the key to use. This can be a full key ARN, or just the alias/ or the key ID (if "+
+			"AWS_REGION is set). If --key-id is not set, the "+store.KeyTemplateName+" "+
+			"entry from FILE will be used "+
+			"(if present).")
+	cmd.Flags().StringVarP(&keyManager, "key-manager", "p", keymanager.GetDefaultKeyManager(),
+		"Source of envelope encryption keys. Options: "+
+			strings.Join(keymanager.GetKeyManagers(), ", "),
+	)
+
+	cmd.Flags().StringVarP(&fromFileStr, "from-file", "i", "", "Read the secret from file instead of the command line")
+
+	cmd.Flags().StringVarP(&algo, "algorithm", "a", secretbox.Name,
+		"Encryption algorithm. If the environment variable BISCUIT_ALGORITHM is "+
+			"set, it will be used as the default value. Options: "+
+			strings.Join(algorithms.GetRegisteredAlgorithmsNames(), ", "),
+	)
+	return cmd
+}
 
 // Put implements the "put" command.
 type put struct {

@@ -3,6 +3,7 @@ package biscuit
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/dcoker/biscuit/algorithms"
@@ -18,7 +19,7 @@ func getCmd(ctx context.Context) *cobra.Command {
 	var filename string
 	var output string
 	awsPriorities := csvFlag([]string{os.Getenv("AWS_REGION")})
-	writer := os.Stdout
+	var writer io.Writer = os.Stdout
 	cmd := &cobra.Command{
 		Use:   "get <name>",
 		Short: "Read a secret",
@@ -44,11 +45,12 @@ func getCmd(ctx context.Context) *cobra.Command {
 				return err
 			}
 			if output != "" {
-				writer, err = os.OpenFile(output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+				f, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 				if err != nil {
 					return err
 				}
-				defer writer.Close()
+				defer f.Close()
+				writer = f
 			}
 			store.SortByKmsRegion(awsPriorities)(values)
 			// There may be multiple values, but we assume that each one represents the same contents
@@ -69,7 +71,14 @@ func getCmd(ctx context.Context) *cobra.Command {
 				return err
 			}
 
-			fmt.Fprintf(writer, "%s\n", plaintext)
+			fmt.Fprintf(writer, "%s", plaintext)
+			if fd, ok := writer.(interface{ Fd() uintptr }); ok {
+				if isatty.IsTerminal(fd.Fd()) {
+					fmt.Printf("\n")
+				}
+
+			}
+
 			return nil
 		},
 	}
