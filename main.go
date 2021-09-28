@@ -18,7 +18,8 @@ var (
 
 func main() {
 	os.Setenv("COLUMNS", "80") // hack to make --help output readable
-	if err := biscuit.Command(context.Background()); err != nil {
+	cmd := biscuit.Cmd(context.Background())
+	if err := cmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		var apiErr smithy.APIError
 		if errors.As(err, &apiErr) {
