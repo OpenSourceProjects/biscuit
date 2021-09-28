@@ -2,7 +2,6 @@ package biscuit
 
 import (
 	"context"
-	"embed"
 	"fmt"
 	"os"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	"github.com/dcoker/biscuit/algorithms/aesgcm256"
 	"github.com/dcoker/biscuit/algorithms/plain"
 	"github.com/dcoker/biscuit/algorithms/secretbox"
+	"github.com/dcoker/biscuit/cmd/internal/assets"
 	"github.com/dcoker/biscuit/cmd/internal/shared"
 	"github.com/dcoker/biscuit/cmd/kms"
 	"github.com/spf13/cobra"
@@ -23,9 +23,6 @@ import (
 var (
 	Version = "n/a"
 )
-
-//go:embed data/*
-var fileSystem embed.FS
 
 func registerAlgorithms() error {
 	if err := algorithms.Register(secretbox.Name, secretbox.New()); err != nil {
@@ -90,7 +87,7 @@ func Cmd(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "biscuit",
 		Short: "Manage KMS secrets in source code",
-		Long:  mustAsset("data/usage.txt"),
+		Long:  assets.Must("data/usage.txt"),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := initializeConfig(cmd); err != nil {
 				return err
@@ -122,7 +119,7 @@ func Command(ctx context.Context) error {
 		return err
 	}
 
-	app := kingpin.New(shared.ProgName, mustAsset("data/usage.txt"))
+	app := kingpin.New(shared.ProgName, assets.Must("data/usage.txt"))
 	app.Version(Version)
 	app.UsageTemplate(kingpin.LongHelpTemplate)
 	getFlags := app.Command("get", "Read a secret.")
@@ -131,13 +128,13 @@ func Command(ctx context.Context) error {
 	exportFlags := app.Command("export", "Print all secrets to stdout in plaintext YAML.")
 	kmsFlags := app.Command("kms", "AWS KMS-specific operations.")
 	kmsIDFlags := kmsFlags.Command("get-caller-identity", "Print the AWS credentials.")
-	kmsInitFlags := kmsFlags.Command("init", mustAsset("data/kmsinit.txt"))
+	kmsInitFlags := kmsFlags.Command("init", assets.Must("data/kmsinit.txt"))
 	kmsDeprovisionFlags := kmsFlags.Command("deprovision", "Deprovision AWS resources.")
-	kmsEditKeyPolicyFlags := kmsFlags.Command("edit-key-policy", mustAsset("data/kmseditkeypolicy.txt"))
+	kmsEditKeyPolicyFlags := kmsFlags.Command("edit-key-policy", assets.Must("data/kmseditkeypolicy.txt"))
 	kmsGrantsFlags := kmsFlags.Command("grants", "Manage KMS grants.")
-	kmsGrantsListFlags := kmsGrantsFlags.Command("list", mustAsset("data/kmsgrantslist.txt"))
-	kmsGrantsCreateFlags := kmsGrantsFlags.Command("create", mustAsset("data/kmsgrantcreate.txt"))
-	kmsGrantsRetireFlags := kmsGrantsFlags.Command("retire", mustAsset("data/kmsgrantsretire.txt"))
+	kmsGrantsListFlags := kmsGrantsFlags.Command("list", assets.Must("data/kmsgrantslist.txt"))
+	kmsGrantsCreateFlags := kmsGrantsFlags.Command("create", assets.Must("data/kmsgrantcreate.txt"))
+	kmsGrantsRetireFlags := kmsGrantsFlags.Command("retire", assets.Must("data/kmsgrantsretire.txt"))
 
 	getCommand := NewGet(getFlags)
 	writeCommand := NewPut(putFlags)
@@ -148,7 +145,7 @@ func Command(ctx context.Context) error {
 	kmsGrantsListCommand := kms.NewKmsGrantsList(kmsGrantsListFlags)
 	kmsGrantsCreateCommand := kms.NewKmsGrantsCreate(kmsGrantsCreateFlags)
 	kmsGrantsRetireCommand := kms.NewKmsGrantsRetire(kmsGrantsRetireFlags)
-	kmsInitCommand := kms.NewKmsInit(kmsInitFlags, mustAsset("data/awskms-key.template"))
+	kmsInitCommand := kms.NewKmsInit(kmsInitFlags, assets.Must("data/awskms-key.template"))
 	kmsDeprovisionCommand := kms.NewKmsDeprovision(kmsDeprovisionFlags)
 
 	behavior := kingpin.MustParse(app.Parse(os.Args[1:]))
@@ -178,12 +175,4 @@ func Command(ctx context.Context) error {
 	default:
 		return fmt.Errorf("not implemented")
 	}
-}
-
-func mustAsset(filename string) string {
-	bytes, err := fileSystem.ReadFile(filename)
-	if err != nil {
-		panic(err)
-	}
-	return string(bytes)
 }

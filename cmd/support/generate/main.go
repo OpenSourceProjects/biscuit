@@ -16,7 +16,7 @@ func main() {
 
 const (
 	docFile   = "./doc.go"
-	usageFile = "./cmd/biscuit/data/usage.txt"
+	usageFile = "./cmd/internal/assets/data/usage.txt"
 )
 
 func run() error {
