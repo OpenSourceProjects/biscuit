@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dcoker/biscuit/cmd/internal/flags"
 	"github.com/dcoker/biscuit/cmd/internal/shared"
 	"github.com/dcoker/biscuit/internal/yaml"
 	"github.com/dcoker/biscuit/store"
@@ -15,7 +16,7 @@ import (
 
 func exportCmd(ctx context.Context) *cobra.Command {
 	var filename string
-	awsPriorities := csvFlag([]string{os.Getenv("AWS_REGION")})
+	awsPriorities := flags.CSV([]string{os.Getenv("AWS_REGION")})
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Print all secrets to stdout in plaintext YAML",

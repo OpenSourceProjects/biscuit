@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/dcoker/biscuit/algorithms"
+	"github.com/dcoker/biscuit/cmd/internal/flags"
 	"github.com/dcoker/biscuit/cmd/internal/shared"
 	"github.com/dcoker/biscuit/keymanager"
 	"github.com/dcoker/biscuit/store"
@@ -18,7 +19,7 @@ import (
 func getCmd(ctx context.Context) *cobra.Command {
 	var filename string
 	var output string
-	awsPriorities := csvFlag([]string{os.Getenv("AWS_REGION")})
+	awsPriorities := flags.CSV([]string{os.Getenv("AWS_REGION")})
 	var writer io.Writer = os.Stdout
 	cmd := &cobra.Command{
 		Use:   "get <name>",
