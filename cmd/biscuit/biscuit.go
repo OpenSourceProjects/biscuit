@@ -105,6 +105,7 @@ func Cmd(ctx context.Context) *cobra.Command {
 		getCmd(ctx),
 		putCmd(ctx),
 		listCmd(ctx),
+		exportCmd(ctx),
 	)
 	return cmd
 }
