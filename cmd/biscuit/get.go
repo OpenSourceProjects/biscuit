@@ -10,8 +10,75 @@ import (
 	"github.com/dcoker/biscuit/keymanager"
 	"github.com/dcoker/biscuit/store"
 	"github.com/mattn/go-isatty"
+	"github.com/spf13/cobra"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+func getCmd(ctx context.Context) *cobra.Command {
+	var filename string
+	var output string
+	awsPriorities := csvFlag([]string{os.Getenv("AWS_REGION")})
+	writer := os.Stdout
+	cmd := &cobra.Command{
+		Use:   "get <name>",
+		Short: "Read a secret",
+		Example: `
+		get -f store.yaml password
+		`,
+		Args: cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			for k, v := range map[string]string{
+				"filename": filename,
+			} {
+				if v == "" {
+					return fmt.Errorf("flag %s marked as required", k)
+				}
+			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			database := store.NewFileStore(filename)
+			values, err := database.Get(name)
+			if err != nil {
+				return err
+			}
+			if output != "" {
+				writer, err = os.OpenFile(output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+				if err != nil {
+					return err
+				}
+				defer writer.Close()
+			}
+			store.SortByKmsRegion(awsPriorities)(values)
+			// There may be multiple values, but we assume that each one represents the same contents
+			// so we stop after processing just one successfully.
+			var plaintext []byte
+			for _, value := range values {
+				plaintext, err = decryptOneValue(ctx, value, name)
+				if err != nil {
+					fmt.Fprintf(os.Stderr,
+						"Warning: decryption under %s failed: %s\n",
+						value.KeyManager,
+						err)
+					continue
+				}
+				break
+			}
+			if err != nil {
+				return err
+			}
+
+			fmt.Fprintf(writer, "%s\n", plaintext)
+			return nil
+		},
+	}
+	cmd.Flags().StringVarP(&filename, "filename", "f", "", "Name of file storing the secrets. If the environment variable BISCUIT_FILENAME")
+	cmd.Flags().StringVarP(&output, "output", "o", "", "Write to FILE instead of stdout")
+	cmd.Flags().VarP(&awsPriorities, "aws-region-priority", "p", awsPriorityTxt)
+
+	return cmd
+}
 
 type get struct {
 	name           *string

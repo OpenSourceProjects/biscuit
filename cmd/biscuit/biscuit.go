@@ -101,7 +101,9 @@ func Cmd(ctx context.Context) *cobra.Command {
 			return fmt.Errorf("not valid command")
 		},
 	}
-	cmd.AddCommand()
+	cmd.AddCommand(
+		getCmd(ctx),
+	)
 	return cmd
 }
 
