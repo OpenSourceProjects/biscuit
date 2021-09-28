@@ -14,6 +14,8 @@ func Cmd(ctx context.Context) *cobra.Command {
 			return fmt.Errorf("must select a subcommand of 'kms'")
 		},
 	}
-	cmd.AddCommand()
+	cmd.AddCommand(
+		initCmd(ctx),
+	)
 	return cmd
 }

@@ -18,12 +18,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/smithy-go"
+	"github.com/dcoker/biscuit/algorithms"
+	"github.com/dcoker/biscuit/algorithms/secretbox"
+	"github.com/dcoker/biscuit/cmd/internal/assets"
+	"github.com/dcoker/biscuit/cmd/internal/flags"
 	"github.com/dcoker/biscuit/cmd/internal/shared"
 	myAWS "github.com/dcoker/biscuit/internal/aws"
 	"github.com/dcoker/biscuit/internal/aws/arn"
 	stringsFunc "github.com/dcoker/biscuit/internal/strings"
 	"github.com/dcoker/biscuit/keymanager"
 	"github.com/dcoker/biscuit/store"
+	"github.com/spf13/cobra"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -33,6 +38,117 @@ var (
 		"prefixed forms are used, the full ARN is composed by using the account ID of the user " +
 		"invoking the command. Principals prefixed with arn: are passed to AWS verbatim."
 )
+
+func initCmd(ctx context.Context) *cobra.Command {
+	var filename string
+	algo := flags.NewEnum(algorithms.GetRegisteredAlgorithmsNames(), secretbox.Name)
+	template := assets.Must("data/awskms-key.template")
+	regions := flags.CSV([]string{"us-east-1", "us-west-1", "us-west-2"})
+	label := flags.NewRegex("^[a-zA-Z0-9_-]+$", "default")
+	adminstrators := flags.CSV{}
+	users := flags.CSV{}
+	cloudformationTemplateURL := flags.URL{}
+	cmd := &cobra.Command{
+		Use:   "init",
+		Short: "Initializes or updates a file with key configuration for use with AWS KMS",
+		Long:  assets.Must("data/kmsinit.txt"),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			for k, v := range map[string]string{
+				"filename": filename,
+			} {
+				if v == "" {
+					return fmt.Errorf("flag %s marked as required", k)
+				}
+			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("algo", algo)
+			// label := viper.GetString("label")
+			// filename := viper.GetString("filename")
+			l := label.String()
+			algorithm := algo.String()
+			createSimpleRoles, err := cmd.Flags().GetBool("create-simple-roles")
+			if err != nil {
+				return err
+			}
+			disableIAM, err := cmd.Flags().GetBool("disable-iam-policies")
+			if err != nil {
+				return err
+			}
+			createMissingKeys, err := cmd.Flags().GetBool("create-missing-keys")
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Label is", l)
+			fmt.Println("createSimpleRoles", createSimpleRoles)
+			fmt.Println("disableIAMKeys", disableIAM)
+			fmt.Println("filename", filename)
+			fmt.Println("algorithm", algorithm)
+			fmt.Println("TemaplateURL", cloudformationTemplateURL)
+			rs := []string(regions)
+			admins := adminstrators.String()
+			users := users.String()
+			cfTemplate := cloudformationTemplateURL.String()
+			init := &kmsInit{
+				regions:                   &rs,
+				label:                     &l,
+				createMissingKeys:         &createMissingKeys,
+				createSimpleRoles:         &createSimpleRoles,
+				disableIam:                &disableIAM,
+				administratorArns:         &admins,
+				userArns:                  &users,
+				filename:                  &filename,
+				algorithm:                 &algorithm,
+				cloudformationTemplateURL: &cfTemplate,
+				keyCloudformationTemplate: template,
+			}
+			return init.Run(ctx)
+
+		},
+	}
+	cmd.Flags().VarP(&regions, "regions", "r", "Comma-delimited list of regions to provision keys in. If the enviroment variable BISCUIT_REGIONS "+
+		"is set, it will be used as the default value.")
+
+	cmd.Flags().VarP(label, "label", "l",
+		"Label for the keys created. This is used to uniquely identify the keys across regions. There can "+
+			"be multiple labels in use within an AWS account. If the environment variable BISCUIT_LABEL "+
+			"is set, it will be used as the default value")
+
+	cmd.Flags().Bool("create-simple-roles", false,
+		"Create simplified roles that are a allowed full encrypt or decrypt privileges under the created keys. "+
+			"Note that this requires sufficient IAM privileges to call iam:CreateRole")
+
+	cmd.Flags().Bool("create-missing-keys", false,
+		"Provision regions that are not already configured for the speccified label")
+
+	cmd.Flags().VarP(&adminstrators, "administrators", "d",
+		"Comma-delimited list of IAM users, IAM roles, and AWS services ARNs that will "+
+			"have administration privileges in the key policy attached to the new keys "+arnDetailsMessage)
+
+	cmd.Flags().VarP(&users, "users", "u",
+		"Comma-delimited list of IAM users, IAM roles, and AWS services ARNs that will have "+
+			"user privileges in the key policy attached to the new keys "+arnDetailsMessage)
+
+	cmd.Flags().Bool("disable-iam-policies", false,
+		"Create KMS keys that will not evaluate IAM policies. If disabled, only the Key Policy document will "+
+			"be evaluated when KMS authorizes API calls. Note that using this setting will prevent the "+
+			"root account from accessing this key, and can require contacting AWS support for resolving "+
+			"configuration problems")
+
+	cmd.Flags().Var(&cloudformationTemplateURL, "cloudformation-template-url",
+		"Full URL to the CloudFormation template to use. This overrides the built-in template.")
+
+	cmd.Flags().StringVarP(&filename, "filename", "f", "", "Name of file storing the secrets. If the environment variable BISCUIT_FILENAME")
+
+	cmd.Flags().VarP(algo, "algorithm", "a", "Encryption algorithm. If the environment variable BISCUIT_ALGORITHM is "+
+		"set, it will be used as the default value. Options: "+
+		strings.Join(algorithms.GetRegisteredAlgorithmsNames(), ", "),
+	)
+
+	return cmd
+}
 
 type kmsInit struct {
 	regions           *[]string
