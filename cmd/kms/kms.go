@@ -16,6 +16,7 @@ func Cmd(ctx context.Context) *cobra.Command {
 	}
 	cmd.AddCommand(
 		initCmd(ctx),
+		getCallerIDCmd(ctx),
 	)
 	return cmd
 }
