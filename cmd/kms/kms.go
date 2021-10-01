@@ -19,6 +19,21 @@ func Cmd(ctx context.Context) *cobra.Command {
 		getCallerIDCmd(ctx),
 		deprovisionCmd(ctx),
 		editKeyPolicyCmd(ctx),
+		grantCmd(ctx),
 	)
 	return cmd
+}
+
+func grantCmd(ctx context.Context) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "grants",
+		Short: "Mange KMS grants",
+	}
+	cmd.AddCommand(
+		grantCreateCmd(ctx),
+		grantListCmd(ctx),
+		grantsRetireCmd(ctx),
+	)
+	return cmd
+
 }

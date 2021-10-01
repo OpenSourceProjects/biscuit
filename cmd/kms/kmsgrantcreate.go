@@ -9,20 +9,134 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/dcoker/biscuit/cmd/internal/assets"
 	"github.com/dcoker/biscuit/cmd/internal/shared"
 	myAWS "github.com/dcoker/biscuit/internal/aws"
 	"github.com/dcoker/biscuit/internal/aws/arn"
 	"github.com/dcoker/biscuit/internal/yaml"
 	"github.com/dcoker/biscuit/keymanager"
 	"github.com/dcoker/biscuit/store"
+	"github.com/spf13/cobra"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+type enumGrants struct {
+	Allowed []types.GrantOperation
+	Value   []types.GrantOperation
+}
+
+func newEnumGrants(d []types.GrantOperation) *enumGrants {
+	var g types.GrantOperation
+	return &enumGrants{
+		Allowed: g.Values(),
+		Value:   d,
+	}
+}
+
+func (a enumGrants) String() string {
+	return strings.Join(mapToStr(a.Value), ",")
+}
+
+func mapToStr(grants []types.GrantOperation) []string {
+	val := []string{}
+	for _, g := range grants {
+		val = append(val, string(g))
+	}
+	return val
+}
+
+func mapFromString(grants []string) []types.GrantOperation {
+	val := []types.GrantOperation{}
+	for _, g := range grants {
+		val = append(val, types.GrantOperation(g))
+	}
+	return val
+}
+
+func (a *enumGrants) Set(p string) error {
+	grantStrs := strings.Split(p, ",")
+	grants := mapFromString(grantStrs)
+	isIncluded := func(grants []types.GrantOperation, g types.GrantOperation) bool {
+		for _, grant := range grants {
+			if g == grant {
+				return true
+			}
+		}
+		return false
+	}
+	for _, g := range grants {
+		if !isIncluded(g.Values(), g) {
+			return fmt.Errorf("%s is not included in %s", p, strings.Join(mapToStr(g.Values()), "|"))
+		}
+	}
+
+	a.Value = grants
+	return nil
+}
+
+func (a *enumGrants) Type() string {
+	return "string"
+}
+
+func grantCreateCmd(ctx context.Context) *cobra.Command {
+	var retiringPrincipal string
+	var granteePrincipal string
+	var filename string
+	long := assets.Must("data/kmsgrantcreate.txt")
+	grants := newEnumGrants([]types.GrantOperation{
+		types.GrantOperationDecrypt,
+		types.GrantOperationRetireGrant,
+	})
+	cmd := &cobra.Command{
+		Use:   "create <name>",
+		Short: strings.Split(long, "\n")[0],
+		Long:  long,
+		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			for k, v := range map[string]string{
+				"filename": filename,
+			} {
+				if v == "" {
+					return fmt.Errorf("flag %s marked as required", k)
+				}
+			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			allNames, err := cmd.Flags().GetBool("all-names")
+			if err != nil {
+				return err
+			}
+			create := &kmsGrantsCreate{
+				name:              &name,
+				granteePrincipal:  &granteePrincipal,
+				retiringPrincipal: &retiringPrincipal,
+				filename:          &filename,
+				operations:        grants.Value,
+				allNames:          &allNames,
+			}
+			return create.Run(ctx)
+		},
+	}
+	cmd.Flags().Bool("all-names", false, "If set, the grant allows the grantee to decrypt any values encrypted under "+
+		"the keys that the named secret is encrypted with.")
+	cmd.Flags().StringVarP(&retiringPrincipal, "retiring-principal", "e", "", "The ARN that can retire the grant")
+	cmd.Flags().StringVarP(&filename, "filename", "f", "", "Name of file storing the secrets. If the environment variable BISCUIT_FILENAME")
+	var g types.GrantOperation
+	cmd.Flags().VarP(grants, "operations", "o",
+		"Comma-separated list of AWS KMS operations this grant is allowing. Options: "+
+			strings.Join(mapToStr(g.Values()), ","),
+	)
+	return cmd
+}
 
 type kmsGrantsCreate struct {
 	name,
@@ -41,8 +155,9 @@ func NewKmsGrantsCreate(c *kingpin.CmdClause) shared.Command {
 		"the keys that the named secret is encrypted with.").Default("false").Bool()
 	params.granteePrincipal = c.Flag("grantee-principal", "The ARN that will be granted "+
 		"additional privileges.").Short('g').PlaceHolder("ARN").Required().String()
-	params.retiringPrincipal = c.Flag("retiring-principal", "The ARN that can retire the "+
-		"grant.").Short('e').PlaceHolder("ARN").String()
+	params.retiringPrincipal = c.Flag("retiring-principal",
+		"The ARN that can retire the "+
+			"grant.").Short('e').PlaceHolder("ARN").String()
 	params.operations = operationsFlag(c)
 	params.filename = shared.FilenameFlag(c)
 	return params

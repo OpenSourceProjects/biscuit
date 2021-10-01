@@ -3,14 +3,49 @@ package kms
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/dcoker/biscuit/cmd/internal/assets"
 	"github.com/dcoker/biscuit/cmd/internal/shared"
 	"github.com/dcoker/biscuit/internal/yaml"
 	"github.com/dcoker/biscuit/keymanager"
 	"github.com/dcoker/biscuit/store"
+	"github.com/spf13/cobra"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+func grantListCmd(ctx context.Context) *cobra.Command {
+	long := assets.Must("data/kmsgrantslist.txt")
+	var filename string
+	cmd := &cobra.Command{
+		Use:   "list <name>",
+		Short: strings.Split(long, "\n")[0],
+		Long:  long,
+		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			for k, v := range map[string]string{
+				"filename": filename,
+			} {
+				if v == "" {
+					return fmt.Errorf("flag %s marked as required", k)
+				}
+			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			list := &kmsGrantsList{
+				name:     &name,
+				filename: &filename,
+			}
+			cmd.Flags().StringVarP(&filename, "filename", "f", "", "Name of file storing the secrets. If the environment variable BISCUIT_FILENAME")
+			return list.Run(ctx)
+		},
+	}
+	return cmd
+
+}
 
 type kmsGrantsList struct {
 	name, filename *string
