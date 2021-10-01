@@ -18,6 +18,7 @@ func Cmd(ctx context.Context) *cobra.Command {
 		initCmd(ctx),
 		getCallerIDCmd(ctx),
 		deprovisionCmd(ctx),
+		editKeyPolicyCmd(ctx),
 	)
 	return cmd
 }

@@ -10,9 +10,43 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/dcoker/biscuit/cmd/internal/assets"
+	"github.com/dcoker/biscuit/cmd/internal/flags"
 	"github.com/dcoker/biscuit/cmd/internal/shared"
+	"github.com/spf13/cobra"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+func editKeyPolicyCmd(ctx context.Context) *cobra.Command {
+	regions := flags.CSV([]string{"us-east-1", "us-west-1", "us-west-2"})
+	label := flags.NewRegex("^[a-zA-Z0-9_-]+$", "default")
+	var forceRegion string
+	cmd := &cobra.Command{
+		Use:   "edit-key-policy",
+		Short: "Edit the KMS Key Policy for a label across regions",
+		Long:  assets.Must("data/kmseditkeypolicy.txt"),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			rs := []string(regions)
+			l := label.String()
+			edit := &kmsEditKeyPolicy{
+				regions:     &rs,
+				label:       &l,
+				forceRegion: &forceRegion,
+			}
+			return edit.Run(ctx)
+		},
+	}
+	cmd.Flags().StringVar(&forceRegion, "force-region", "",
+		"If set, the key policies will not be checked for consistency between regions and "+
+			"the editor will open with the policy from the specified region")
+	cmd.Flags().VarP(&regions, "regions", "r", "Comma-delimited list of regions to provision keys in. If the enviroment variable BISCUIT_REGIONS "+
+		"is set, it will be used as the default value.")
+	cmd.Flags().VarP(label, "label", "l",
+		"Label for the keys created. This is used to uniquely identify the keys across regions. There can "+
+			"be multiple labels in use within an AWS account. If the environment variable BISCUIT_LABEL "+
+			"is set, it will be used as the default value")
+	return cmd
+}
 
 var (
 	errNoEditorFound        = errors.New("Set your editor preference with VISUAL or EDITOR environment variables.")
