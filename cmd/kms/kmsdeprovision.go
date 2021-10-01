@@ -11,10 +11,46 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/dcoker/biscuit/cmd/internal/flags"
 	"github.com/dcoker/biscuit/cmd/internal/shared"
 	myAWS "github.com/dcoker/biscuit/internal/aws"
+	"github.com/spf13/cobra"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+func deprovisionCmd(ctx context.Context) *cobra.Command {
+	regions := flags.CSV([]string{"us-east-1", "us-west-1", "us-west-2"})
+	label := flags.NewRegex("^[a-zA-Z0-9_-]+$", "default")
+	cmd := &cobra.Command{
+		Use:   "deprovision",
+		Short: "Deprovision AWS resources",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			l := label.String()
+			rs := []string(regions)
+			destructive, err := cmd.Flags().GetBool("destructive")
+			if err != nil {
+				return err
+			}
+
+			dep := &kmsDeprovision{
+				label:       &l,
+				regions:     &rs,
+				destructive: &destructive,
+			}
+
+			return dep.Run(ctx)
+		},
+	}
+	cmd.Flags().VarP(&regions, "regions", "r", "Comma-delimited list of regions to provision keys in. If the enviroment variable BISCUIT_REGIONS "+
+		"is set, it will be used as the default value.")
+	cmd.Flags().VarP(label, "label", "l",
+		"Label for the keys created. This is used to uniquely identify the keys across regions. There can "+
+			"be multiple labels in use within an AWS account. If the environment variable BISCUIT_LABEL "+
+			"is set, it will be used as the default value")
+	cmd.Flags().Bool("destructive", false,
+		"If true, the resources for this label will actually be deleted.")
+	return cmd
+}
 
 type kmsDeprovision struct {
 	regions     *[]string
