@@ -22,14 +22,12 @@ import (
 	"github.com/dcoker/biscuit/algorithms/secretbox"
 	"github.com/dcoker/biscuit/cmd/internal/assets"
 	"github.com/dcoker/biscuit/cmd/internal/flags"
-	"github.com/dcoker/biscuit/cmd/internal/shared"
 	myAWS "github.com/dcoker/biscuit/internal/aws"
 	"github.com/dcoker/biscuit/internal/aws/arn"
 	stringsFunc "github.com/dcoker/biscuit/internal/strings"
 	"github.com/dcoker/biscuit/keymanager"
 	"github.com/dcoker/biscuit/store"
 	"github.com/spf13/cobra"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
@@ -162,44 +160,6 @@ type kmsInit struct {
 	algorithm,
 	cloudformationTemplateURL *string
 	keyCloudformationTemplate string
-}
-
-// NewKmsInit configures the command to configure AWS.
-func NewKmsInit(c *kingpin.CmdClause, keyCloudformationTemplate string) shared.Command {
-	params := &kmsInit{keyCloudformationTemplate: keyCloudformationTemplate}
-	params.regions = regionsFlag(c)
-	params.label = labelFlag(c)
-	params.createMissingKeys = c.Flag("create-missing-keys",
-		"Provision regions that are not already configured for the speccified label.").Bool()
-	params.createSimpleRoles = c.Flag("create-simple-roles",
-		"Create simplified roles that are a allowed full encrypt or decrypt privileges under the created keys"+
-			". Note that this requires sufficient IAM privileges to call iam:CreateRole.").Bool()
-	params.administratorArns = c.Flag("administrators",
-		"Comma-delimited list of IAM users, IAM roles, and AWS services ARNs that will "+
-			"have administration privileges in the key policy attached to the new keys. "+
-			arnDetailsMessage).
-		Short('d').
-		PlaceHolder("ARN").
-		String()
-	params.userArns = c.Flag("users",
-		"Comma-delimited list of IAM users, IAM roles, and AWS services ARNs that will have "+
-			"user privileges in the key policy attached to the new keys. "+arnDetailsMessage).
-		Short('u').
-		PlaceHolder("ARN").
-		String()
-	params.disableIam = c.Flag("disable-iam-policies",
-		"Create KMS keys that will not evaluate IAM policies. If disabled, only the Key Policy document will "+
-			"be evaluated when KMS authorizes API calls. Note that using this setting will prevent the "+
-			"root account from accessing this key, and can require contacting AWS support for resolving "+
-			"configuration problems.").
-		Bool()
-	params.cloudformationTemplateURL = c.Flag("cloudformation-template-url",
-		"Full URL to the CloudFormation template to use. This overrides the built-in template.").
-		PlaceHolder("URL").
-		String()
-	params.filename = shared.FilenameFlag(c)
-	params.algorithm = shared.AlgorithmFlag(c)
-	return params
 }
 
 // Run runs the command.

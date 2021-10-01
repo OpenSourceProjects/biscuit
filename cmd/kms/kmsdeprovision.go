@@ -12,10 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/dcoker/biscuit/cmd/internal/flags"
-	"github.com/dcoker/biscuit/cmd/internal/shared"
 	myAWS "github.com/dcoker/biscuit/internal/aws"
 	"github.com/spf13/cobra"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 func deprovisionCmd(ctx context.Context) *cobra.Command {
@@ -56,16 +54,6 @@ type kmsDeprovision struct {
 	regions     *[]string
 	label       *string
 	destructive *bool
-}
-
-// NewKmsDeprovision configures the flags for kmsDeprovision.
-func NewKmsDeprovision(c *kingpin.CmdClause) shared.Command {
-	params := &kmsDeprovision{}
-	params.regions = regionsFlag(c)
-	params.label = labelFlag(c)
-	params.destructive = c.Flag("destructive",
-		"If true, the resources for this label will actually be deleted.").Bool()
-	return params
 }
 
 // Run the command.

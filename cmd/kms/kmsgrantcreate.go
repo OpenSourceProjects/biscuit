@@ -17,14 +17,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/dcoker/biscuit/cmd/internal/assets"
-	"github.com/dcoker/biscuit/cmd/internal/shared"
 	myAWS "github.com/dcoker/biscuit/internal/aws"
 	"github.com/dcoker/biscuit/internal/aws/arn"
 	"github.com/dcoker/biscuit/internal/yaml"
 	"github.com/dcoker/biscuit/keymanager"
 	"github.com/dcoker/biscuit/store"
 	"github.com/spf13/cobra"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 type enumGrants struct {
@@ -145,22 +143,6 @@ type kmsGrantsCreate struct {
 	filename *string
 	operations []types.GrantOperation
 	allNames   *bool
-}
-
-// NewKmsGrantsCreate constructs the command to create a grant.
-func NewKmsGrantsCreate(c *kingpin.CmdClause) shared.Command {
-	params := &kmsGrantsCreate{}
-	params.name = c.Arg("name", "Name of the secret to grant access to.").Required().String()
-	params.allNames = c.Flag("all-names", "If set, the grant allows the grantee to decrypt any values encrypted under "+
-		"the keys that the named secret is encrypted with.").Default("false").Bool()
-	params.granteePrincipal = c.Flag("grantee-principal", "The ARN that will be granted "+
-		"additional privileges.").Short('g').PlaceHolder("ARN").Required().String()
-	params.retiringPrincipal = c.Flag("retiring-principal",
-		"The ARN that can retire the "+
-			"grant.").Short('e').PlaceHolder("ARN").String()
-	params.operations = operationsFlag(c)
-	params.filename = shared.FilenameFlag(c)
-	return params
 }
 
 type grantsCreatedOutput struct {

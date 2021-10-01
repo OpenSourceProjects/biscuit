@@ -14,11 +14,9 @@ import (
 
 	"github.com/dcoker/biscuit/algorithms"
 	"github.com/dcoker/biscuit/algorithms/secretbox"
-	"github.com/dcoker/biscuit/cmd/internal/shared"
 	"github.com/dcoker/biscuit/keymanager"
 	"github.com/dcoker/biscuit/store"
 	"github.com/spf13/cobra"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 func putCmd(ctx context.Context) *cobra.Command {
@@ -111,27 +109,6 @@ var (
 		"Please specify either a secret in a positional argument, or use --from-file, " +
 			"but not both.")
 )
-
-// NewPut configures the command for storing secrets.
-func NewPut(c *kingpin.CmdClause) shared.Command {
-	write := &put{}
-	write.keyID = c.Flag("key-id",
-		"The ID of the key to use. This can be a full key ARN, or just the alias/ or the key ID (if "+
-			"AWS_REGION is set). If --key-id is not set, the "+store.KeyTemplateName+" "+
-			"entry from FILE will be used "+
-			"(if present).").Short('k').String()
-	write.keyManager = c.Flag("key-manager", "Source of envelope encryption keys. Options: "+
-		strings.Join(keymanager.GetKeyManagers(), ", ")).
-		Default(keymanager.GetDefaultKeyManager()).Short('p').Enum(keymanager.GetKeyManagers()...)
-	write.name = c.Arg("name", "Name of the secret.").Required().String()
-	write.value = c.Arg("secret", "Value of the secret.").String()
-	write.fromFile = c.Flag("from-file", "Read the secret from FILE instead "+
-		"of the command line.").PlaceHolder("FILE").Short('i').File()
-	write.algo = shared.AlgorithmFlag(c)
-	write.filename = shared.FilenameFlag(c)
-
-	return write
-}
 
 type encryptResult struct {
 	value store.Value

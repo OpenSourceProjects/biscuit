@@ -12,9 +12,7 @@ import (
 
 	"github.com/dcoker/biscuit/cmd/internal/assets"
 	"github.com/dcoker/biscuit/cmd/internal/flags"
-	"github.com/dcoker/biscuit/cmd/internal/shared"
 	"github.com/spf13/cobra"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 func editKeyPolicyCmd(ctx context.Context) *cobra.Command {
@@ -58,17 +56,6 @@ type kmsEditKeyPolicy struct {
 	label       *string
 	regions     *[]string
 	forceRegion *string
-}
-
-// NewKmsEditKeyPolicy configures the flags for kmsEditKeyPolicy.
-func NewKmsEditKeyPolicy(c *kingpin.CmdClause) shared.Command {
-	return &kmsEditKeyPolicy{
-		label:   labelFlag(c),
-		regions: regionsFlag(c),
-		forceRegion: c.Flag("force-region",
-			"If set, the key policies will not be checked for consistency between regions and "+
-				"the editor will open with the policy from the specified region.").String(),
-	}
 }
 
 // Run the command.

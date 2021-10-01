@@ -6,11 +6,9 @@ import (
 	"strings"
 
 	"github.com/dcoker/biscuit/cmd/internal/assets"
-	"github.com/dcoker/biscuit/cmd/internal/shared"
 	"github.com/dcoker/biscuit/keymanager"
 	"github.com/dcoker/biscuit/store"
 	"github.com/spf13/cobra"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 func grantsRetireCmd(ctx context.Context) *cobra.Command {
@@ -52,15 +50,6 @@ func grantsRetireCmd(ctx context.Context) *cobra.Command {
 
 type kmsGrantsRetire struct {
 	filename, name, grantName *string
-}
-
-// NewKmsGrantsRetire constructs the command to retire grants.
-func NewKmsGrantsRetire(c *kingpin.CmdClause) shared.Command {
-	return &kmsGrantsRetire{
-		filename:  shared.FilenameFlag(c),
-		name:      shared.SecretNameArg(c),
-		grantName: c.Flag("grant-name", "The ID of the Grant to revoke.").Required().String(),
-	}
 }
 
 func (w *kmsGrantsRetire) Run(ctx context.Context) error {

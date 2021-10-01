@@ -7,12 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/dcoker/biscuit/cmd/internal/assets"
-	"github.com/dcoker/biscuit/cmd/internal/shared"
 	"github.com/dcoker/biscuit/internal/yaml"
 	"github.com/dcoker/biscuit/keymanager"
 	"github.com/dcoker/biscuit/store"
 	"github.com/spf13/cobra"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 func grantListCmd(ctx context.Context) *cobra.Command {
@@ -49,14 +47,6 @@ func grantListCmd(ctx context.Context) *cobra.Command {
 
 type kmsGrantsList struct {
 	name, filename *string
-}
-
-// NewKmsGrantsList constructs the command to list grants.
-func NewKmsGrantsList(c *kingpin.CmdClause) shared.Command {
-	params := &kmsGrantsList{}
-	params.name = c.Arg("name", "Name of the secret to list grants for.").Required().String()
-	params.filename = shared.FilenameFlag(c)
-	return params
 }
 
 type grantsForOneAlias struct {

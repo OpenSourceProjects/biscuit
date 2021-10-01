@@ -2,11 +2,8 @@ package kms
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/dcoker/biscuit/cmd/internal/shared"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (
@@ -67,51 +64,4 @@ func (r *regionErrorCollector) Coalesce() error {
 		}
 	}
 	return nil
-}
-
-const knownAwsKmsOperations = "Decrypt,Encrypt,GenerateDataKey,GenerateDataKeyWithoutPlaintext,ReEncryptFrom," +
-	"ReEncryptTo,CreateGrant,RetireGrant"
-
-// OperationsFlag defines a flag for the list of AWS KMS operations
-func operationsFlag(cc *kingpin.CmdClause) []types.GrantOperation {
-	name := "operations"
-	operationsList := strings.Split(knownAwsKmsOperations, ",")
-	fc := cc.Flag(name,
-		"Comma-separated list of AWS KMS operations this grant is allowing. Options: "+
-			strings.Join(operationsList, ", ")).
-		Short('o').
-		Default("Decrypt,RetireGrant")
-	val := (&shared.CommaSeparatedList{}).RestrictTo(operationsList...).Min(1).Name(name)
-	fc.SetValue(val)
-	ops := make([]types.GrantOperation, len(val.V))
-	for i, v := range val.V {
-		ops[i] = types.GrantOperation(v)
-	}
-	return ops
-}
-
-func regionsFlag(cc *kingpin.CmdClause) *[]string {
-	name := "regions"
-	fc := cc.Flag("regions",
-		"Comma-delimited list of regions to provision keys in. If the enviroment variable BISCUIT_REGIONS "+
-			"is set, it will be used as the default value.").
-		Short('r').
-		Default("us-east-1,us-west-1,us-west-2").
-		Envar("BISCUIT_REGIONS")
-	val := (&shared.CommaSeparatedList{}).Min(1).Name(name)
-	fc.SetValue(val)
-	return &val.V
-}
-
-// LabelFlag defines a flag for the label.
-func labelFlag(cc *kingpin.CmdClause) *string {
-	label := "label"
-	return shared.StringFlag(cc.Flag(label,
-		"Label for the keys created. This is used to uniquely identify the keys across regions. There can "+
-			"be multiple labels in use within an AWS account. If the environment variable BISCUIT_LABEL "+
-			"is set, it will be used as the default value.").
-		Short('l').
-		Default("default").
-		Envar("BISCUIT_LABEL"),
-		(&shared.StringValue{}).Regex("^[a-zA-Z0-9_-]+$").Name(label).Trimmed().MinLength(1).MaxLength(20))
 }
