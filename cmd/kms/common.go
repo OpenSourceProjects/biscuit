@@ -23,30 +23,6 @@ func cfStackName(label string) string {
 	return fmt.Sprintf("%s-%s", ProgName, label)
 }
 
-type errAliasNotFound struct {
-	aliasName string
-}
-
-func (e *errAliasNotFound) Error() string {
-	return fmt.Sprintf("key alias '%s' not found", e.aliasName)
-}
-
-type errNoAliasFoundForKey struct {
-	keyID string
-}
-
-func (e *errNoAliasFoundForKey) Error() string {
-	return fmt.Sprintf("no alias found for key %s", e.keyID)
-}
-
-type errPolicyMismatch struct {
-	leftRegion, rightRegion string
-}
-
-func (e *errPolicyMismatch) Error() string {
-	return fmt.Sprintf("the policies in region %s and %s do not match.", e.leftRegion, e.rightRegion)
-}
-
 type regionError struct {
 	Region string
 	Err    error

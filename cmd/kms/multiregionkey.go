@@ -79,7 +79,10 @@ func NewMultiRegionKey(ctx context.Context, aliasName string, regions []string, 
 			continue
 		}
 		if result.policy != policy {
-			errs = append(errs, &errPolicyMismatch{prevRegion, result.region})
+			errs = append(
+				errs,
+				fmt.Errorf("the policies in region %s and %s do not match", prevRegion, result.region),
+			)
 		}
 	}
 	if len(errs) > 0 {

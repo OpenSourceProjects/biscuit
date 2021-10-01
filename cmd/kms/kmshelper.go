@@ -48,7 +48,7 @@ func (k *kmsHelper) GetAliasByKeyID(ctx context.Context, keyID string) (string, 
 		}
 	}
 
-	return "", &errNoAliasFoundForKey{keyID}
+	return "", fmt.Errorf("no alias found for key %s", keyID)
 }
 
 func (k *kmsHelper) GetAliasTargetAndPolicy(ctx context.Context, aliasName string) (string, string, error) {
@@ -57,7 +57,7 @@ func (k *kmsHelper) GetAliasTargetAndPolicy(ctx context.Context, aliasName strin
 		return "", "", err
 	}
 	if alias == nil {
-		return "", "", &errAliasNotFound{aliasName}
+		return "", "", fmt.Errorf("key alias '%s' not found", aliasName)
 	}
 	policyOutput, err := k.GetKeyPolicy(ctx, &kms.GetKeyPolicyInput{KeyId: alias.TargetKeyId,
 		PolicyName: aws.String("default")})
