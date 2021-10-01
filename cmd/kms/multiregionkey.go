@@ -15,6 +15,17 @@ import (
 	myAWS "github.com/dcoker/biscuit/internal/aws"
 )
 
+type regionErrorCollector chan regionError
+
+func (r *regionErrorCollector) Coalesce() error {
+	for err := range *r {
+		if err.Err != nil {
+			return &err
+		}
+	}
+	return nil
+}
+
 // MultiRegionKey represents a collection of KMS Keys that are operated on simultaneously.
 type MultiRegionKey struct {
 	aliasName,

@@ -7,6 +7,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type regionError struct {
+	Region string
+	Err    error
+}
+
+func (r regionError) Error() string {
+	return fmt.Sprintf("%s: %s", r.Region, r.Err)
+}
+
 func Cmd(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "kms",
