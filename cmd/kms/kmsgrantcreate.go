@@ -235,7 +235,7 @@ func computeGrantName(ctx context.Context, input kms.CreateGrantInput) (string, 
 		panic(err)
 	}
 	hashed := sha1.Sum(buf.Bytes())
-	return GrantPrefix + hex.EncodeToString(hashed[:])[:10], nil
+	return grantPrefix + hex.EncodeToString(hashed[:])[:10], nil
 }
 
 func resolveValuesToAliasesAndRegions(ctx context.Context, values store.ValueList) (map[string][]string, error) {

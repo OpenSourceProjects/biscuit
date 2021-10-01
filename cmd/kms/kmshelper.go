@@ -41,7 +41,7 @@ func (k *kmsHelper) GetAliasByKeyID(ctx context.Context, keyID string) (string, 
 			return "", fmt.Errorf("could not retrieve aliases")
 		}
 		for _, alias := range output.Aliases {
-			if strings.HasPrefix(*alias.AliasName, AliasPrefix) && *alias.TargetKeyId == keyID {
+			if strings.HasPrefix(*alias.AliasName, aliasPrefix) && *alias.TargetKeyId == keyID {
 				return *alias.AliasName, nil
 			}
 

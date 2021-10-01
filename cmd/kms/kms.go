@@ -8,22 +8,22 @@ import (
 )
 
 const (
-	// ProgName is the name of this program.
-	ProgName = "biscuit"
+	// progName is the name of this program.
+	progName = "biscuit"
 
-	// AliasPrefix is the prefix of all KMS Key Aliases.
-	AliasPrefix = "alias/" + ProgName + "-"
+	// aliasPrefix is the prefix of all KMS Key Aliases.
+	aliasPrefix = "alias/" + progName + "-"
 
-	// GrantPrefix is the prefix of all KMS Grant Names.
-	GrantPrefix = ProgName + "-"
+	// grantPrefix is the prefix of all KMS Grant Names.
+	grantPrefix = progName + "-"
 )
 
 func kmsAliasName(label string) string {
-	return AliasPrefix + label
+	return aliasPrefix + label
 }
 
 func cfStackName(label string) string {
-	return fmt.Sprintf("%s-%s", ProgName, label)
+	return fmt.Sprintf("%s-%s", progName, label)
 }
 
 type regionError struct {

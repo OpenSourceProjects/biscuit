@@ -160,7 +160,7 @@ func (m *MultiRegionKey) GetGrantDetails(ctx context.Context) (map[string][]type
 				}
 
 				for _, grant := range output.Grants {
-					if grant.Name != nil && strings.HasPrefix(*grant.Name, GrantPrefix) {
+					if grant.Name != nil && strings.HasPrefix(*grant.Name, grantPrefix) {
 						grants = append(grants, grant)
 					}
 
