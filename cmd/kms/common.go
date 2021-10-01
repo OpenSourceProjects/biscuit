@@ -2,16 +2,17 @@ package kms
 
 import (
 	"fmt"
-
-	"github.com/dcoker/biscuit/cmd/internal/shared"
 )
 
 const (
+	// ProgName is the name of this program.
+	ProgName = "biscuit"
+
 	// AliasPrefix is the prefix of all KMS Key Aliases.
-	AliasPrefix = "alias/" + shared.ProgName + "-"
+	AliasPrefix = "alias/" + ProgName + "-"
 
 	// GrantPrefix is the prefix of all KMS Grant Names.
-	GrantPrefix = shared.ProgName + "-"
+	GrantPrefix = ProgName + "-"
 )
 
 func kmsAliasName(label string) string {
@@ -19,7 +20,7 @@ func kmsAliasName(label string) string {
 }
 
 func cfStackName(label string) string {
-	return fmt.Sprintf("%s-%s", shared.ProgName, label)
+	return fmt.Sprintf("%s-%s", ProgName, label)
 }
 
 type errAliasNotFound struct {
