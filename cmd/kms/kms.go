@@ -1,7 +1,6 @@
 package kms
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -35,7 +34,7 @@ func (r regionError) Error() string {
 	return fmt.Sprintf("%s: %s", r.Region, r.Err)
 }
 
-func Cmd(ctx context.Context) *cobra.Command {
+func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "kms",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -43,24 +42,24 @@ func Cmd(ctx context.Context) *cobra.Command {
 		},
 	}
 	cmd.AddCommand(
-		initCmd(ctx),
-		getCallerIDCmd(ctx),
-		deprovisionCmd(ctx),
-		editKeyPolicyCmd(ctx),
-		grantCmd(ctx),
+		initCmd(),
+		getCallerIDCmd(),
+		deprovisionCmd(),
+		editKeyPolicyCmd(),
+		grantCmd(),
 	)
 	return cmd
 }
 
-func grantCmd(ctx context.Context) *cobra.Command {
+func grantCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grants",
 		Short: "Mange KMS grants",
 	}
 	cmd.AddCommand(
-		grantCreateCmd(ctx),
-		grantListCmd(ctx),
-		grantsRetireCmd(ctx),
+		grantCreateCmd(),
+		grantListCmd(),
+		grantsRetireCmd(),
 	)
 	return cmd
 

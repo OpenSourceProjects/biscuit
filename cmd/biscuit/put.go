@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func putCmd(ctx context.Context) *cobra.Command {
+func putCmd() *cobra.Command {
 	var filename string
 	var keyID string
 	var keyManager string
@@ -41,6 +41,7 @@ func putCmd(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			name := args[0]
 			var value string
 			var fromFile *os.File = nil

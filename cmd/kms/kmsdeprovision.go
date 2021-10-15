@@ -16,13 +16,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func deprovisionCmd(ctx context.Context) *cobra.Command {
+func deprovisionCmd() *cobra.Command {
 	regions := flags.CSV([]string{"us-east-1", "us-west-1", "us-west-2"})
 	label := flags.NewRegex("^[a-zA-Z0-9_-]+$", "default")
 	cmd := &cobra.Command{
 		Use:   "deprovision",
 		Short: "Deprovision AWS resources",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			l := label.String()
 			rs := []string(regions)
 			destructive, err := cmd.Flags().GetBool("destructive")

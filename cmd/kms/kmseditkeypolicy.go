@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func editKeyPolicyCmd(ctx context.Context) *cobra.Command {
+func editKeyPolicyCmd() *cobra.Command {
 	regions := flags.CSV([]string{"us-east-1", "us-west-1", "us-west-2"})
 	label := flags.NewRegex("^[a-zA-Z0-9_-]+$", "default")
 	var forceRegion string
@@ -24,6 +24,7 @@ func editKeyPolicyCmd(ctx context.Context) *cobra.Command {
 		Short: "Edit the KMS Key Policy for a label across regions",
 		Long:  assets.Must("data/kmseditkeypolicy.txt"),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			rs := []string(regions)
 			l := label.String()
 			edit := &kmsEditKeyPolicy{

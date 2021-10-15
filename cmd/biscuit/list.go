@@ -1,14 +1,13 @@
 package biscuit
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/dcoker/biscuit/store"
 	"github.com/spf13/cobra"
 )
 
-func listCmd(ctx context.Context) *cobra.Command {
+func listCmd() *cobra.Command {
 	var filename string
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -24,7 +23,6 @@ func listCmd(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			database := store.NewFileStore(filename)
 
 			entries, err := database.GetAll()

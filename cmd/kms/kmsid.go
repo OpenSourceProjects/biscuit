@@ -9,11 +9,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func getCallerIDCmd(ctx context.Context) *cobra.Command {
+func getCallerIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-caller-identity",
 		Short: "Print the AWS credentials",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			cfg := myAWS.MustNewConfig(ctx)
 			credentials, err := cfg.Credentials.Retrieve(ctx)
 			if err != nil {

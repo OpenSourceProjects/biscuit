@@ -83,7 +83,7 @@ func (a *enumGrants) Type() string {
 	return "string"
 }
 
-func grantCreateCmd(ctx context.Context) *cobra.Command {
+func grantCreateCmd() *cobra.Command {
 	var retiringPrincipal string
 	var granteePrincipal string
 	var filename string
@@ -108,6 +108,7 @@ func grantCreateCmd(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			name := args[0]
 			allNames, err := cmd.Flags().GetBool("all-names")
 			if err != nil {

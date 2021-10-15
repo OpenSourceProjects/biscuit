@@ -1,7 +1,6 @@
 package biscuit
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -82,7 +81,7 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) error {
 	return errr
 }
 
-func Cmd(ctx context.Context) *cobra.Command {
+func Cmd() *cobra.Command {
 	if err := registerAlgorithms(); err != nil {
 		panic(err)
 	}
@@ -101,11 +100,11 @@ func Cmd(ctx context.Context) *cobra.Command {
 		},
 	}
 	cmd.AddCommand(
-		getCmd(ctx),
-		putCmd(ctx),
-		listCmd(ctx),
-		exportCmd(ctx),
-		kms.Cmd(ctx),
+		getCmd(),
+		putCmd(),
+		listCmd(),
+		exportCmd(),
+		kms.Cmd(),
 	)
 	return cmd
 }

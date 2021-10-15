@@ -1,7 +1,6 @@
 package biscuit
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -12,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func exportCmd(ctx context.Context) *cobra.Command {
+func exportCmd() *cobra.Command {
 	var filename string
 	awsPriorities := flags.CSV([]string{os.Getenv("AWS_REGION")})
 	cmd := &cobra.Command{
@@ -29,6 +28,7 @@ func exportCmd(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			database := store.NewFileStore(filename)
 			entries, err := database.GetAll()
 			if err != nil {

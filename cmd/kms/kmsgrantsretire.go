@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func grantsRetireCmd(ctx context.Context) *cobra.Command {
+func grantsRetireCmd() *cobra.Command {
 	long := assets.Must("data/kmsgrantsretire.txt")
 	var filename string
 	var grantName string
@@ -33,6 +33,7 @@ func grantsRetireCmd(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			name := args[0]
 			retire := &kmsGrantsRetire{
 				name:      &name,

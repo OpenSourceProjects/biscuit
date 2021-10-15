@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func grantListCmd(ctx context.Context) *cobra.Command {
+func grantListCmd() *cobra.Command {
 	long := assets.Must("data/kmsgrantslist.txt")
 	var filename string
 	cmd := &cobra.Command{
@@ -32,6 +32,7 @@ func grantListCmd(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			name := args[0]
 			list := &kmsGrantsList{
 				name:     &name,

@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func getCmd(ctx context.Context) *cobra.Command {
+func getCmd() *cobra.Command {
 	var filename string
 	var output string
 	awsPriorities := flags.CSV([]string{os.Getenv("AWS_REGION")})
@@ -37,6 +37,7 @@ func getCmd(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			name := args[0]
 			database := store.NewFileStore(filename)
 			values, err := database.Get(name)

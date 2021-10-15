@@ -37,7 +37,7 @@ var (
 		"invoking the command. Principals prefixed with arn: are passed to AWS verbatim."
 )
 
-func initCmd(ctx context.Context) *cobra.Command {
+func initCmd() *cobra.Command {
 	var filename string
 	algo := flags.NewEnum(algorithms.GetRegisteredAlgorithmsNames(), secretbox.Name)
 	template := assets.Must("data/awskms-key.template")
@@ -61,6 +61,7 @@ func initCmd(ctx context.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			fmt.Println("algo", algo)
 			// label := viper.GetString("label")
 			// filename := viper.GetString("filename")
