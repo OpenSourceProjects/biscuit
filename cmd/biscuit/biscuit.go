@@ -86,9 +86,10 @@ func Cmd() *cobra.Command {
 		panic(err)
 	}
 	cmd := &cobra.Command{
-		Use:   "biscuit",
-		Short: "Manage KMS secrets in source code",
-		Long:  assets.Must("data/usage.txt"),
+		Use:     "biscuit",
+		Short:   "Manage KMS secrets in source code",
+		Long:    assets.Must("data/usage.txt"),
+		Version: Version,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := initializeConfig(cmd); err != nil {
 				return err
